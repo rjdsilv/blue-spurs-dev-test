@@ -1,6 +1,7 @@
 package ca.bluespurs.bluespursapitest.rest.server;
 
 import ca.bluespurs.bluespursapitest.common.RestResources;
+import ca.bluespurs.bluespursapitest.exception.InternalServerErrorException;
 import ca.bluespurs.bluespursapitest.exception.InvalidRequestException;
 import ca.bluespurs.bluespursapitest.exception.ProductNotFoundException;
 import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductDto;
@@ -49,22 +50,34 @@ public class ProductSearchRest {
 	 */
 	@GetMapping(value = RestResources.PRODUCT_SEARCH)
 	public ResponseEntity<ProductDto> search(@RequestParam("name") String name) {
-		// The name must containg a value.
+		// The name must containing a value.
 		if (StringUtils.isBlank(name)) {
 			throw new InvalidRequestException("The parameter name cannot be empty or null!");
 		}
 
-		// No product could be found.
+		try {
+			final List<BestBuyProductDto> bestBuyProducts = searchBestBuyProduct(name);
+
+			final ProductDto product = new ProductDto();
+			product.setProductName(bestBuyProducts.get(0).getName());
+			product.setBestPrice(String.format("%.2f", bestBuyProducts.get(0).getRegularPrice()));
+			product.setLocation(BEST_BUY_LOC);
+			return ResponseEntity.ok(product);
+		} catch (Exception ex) {
+			// Rethrows the caught exception.
+			if (ex instanceof ProductNotFoundException) {
+				throw ex;
+			}
+			throw new InternalServerErrorException(ex.getMessage(), ex);
+		}
+	}
+
+	private List<BestBuyProductDto> searchBestBuyProduct(@RequestParam("name") String name) {
 		final BestBuyProductsHolder bestBuy = searchClient.searchBestBuy(name);
 		final List<BestBuyProductDto> bestBuyProducts = bestBuy.getProducts();
 		if (bestBuyProducts.isEmpty()) {
 			throw new ProductNotFoundException(name);
 		}
-
-		final ProductDto product = new ProductDto();
-		product.setProductName(bestBuyProducts.get(0).getName());
-		product.setBestPrice(String.format("%.2f", bestBuyProducts.get(0).getRegularPrice()));
-		product.setLocation(BEST_BUY_LOC);
-		return ResponseEntity.ok(product);
+		return bestBuyProducts;
 	}
 }

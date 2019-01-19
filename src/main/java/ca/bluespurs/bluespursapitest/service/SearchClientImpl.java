@@ -22,6 +22,11 @@ public class SearchClientImpl implements SearchClient {
 
 	private final RestTemplate restTemplate;
 
+	/**
+	 * Creates a new instance of SearchClientImpl using the given {@link RestTemplate}.
+	 *
+	 * @param restTemplate The {@link RestTemplate} to be used.
+	 */
 	@Autowired
 	public SearchClientImpl(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
