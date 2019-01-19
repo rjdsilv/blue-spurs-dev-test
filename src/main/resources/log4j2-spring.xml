@@ -8,9 +8,9 @@
 		<Console name="Console-Appender" target="SYSTEM_OUT" follow="true">
 			<PatternLayout pattern="${LOG_PATTERN}"/>
 		</Console>
-		<RollingFile name="demo"
-		             fileName="./logs/bluspurs/application.log"
-		             filePattern="./logs/bluspurs/old/application.%d{yyyy-MM-dd_HH}.%i.log.gz">
+		<RollingFile name="Blue-Spurs-Appender"
+		             fileName="./logs/blue-spurs/application.log"
+		             filePattern="./logs/blue-spurs/old/application.%d{yyyy-MM-dd_HH}.%i.log.gz">
 			<PatternLayout>
 				<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p --- [%15.15t] %-40.40c{1.} %m%n%xwEx</pattern>
 			</PatternLayout>
@@ -19,14 +19,15 @@
 	</Appenders>
 	<Loggers>
 		<Logger name="org.springframework" level="INFO" additivity="false">
-			<AppenderRef ref="SpringBoot-File-Appender"/>
+			<AppenderRef ref="Blue-Spurs-Appender"/>
 			<AppenderRef ref="Console-Appender"/>
 		</Logger>
 		<Logger name="ca.bluespurs.bluespursapitest" level="DEBUG" additivity="false">
-			<AppenderRef ref="User-Mgmt-File-Appender"/>
+			<AppenderRef ref="Blue-Spurs-Appender"/>
 			<AppenderRef ref="Console-Appender"/>
 		</Logger>
 		<Root>
+			<AppenderRef ref="Blue-Spurs-Appender"/>
 			<AppenderRef ref="Console-Appender"/>
 		</Root>
 	</Loggers>
