@@ -1,6 +1,9 @@
 package ca.bluespurs.bluespursapitest.service;
 
 import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductsHolder;
+import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductsHolder;
+import ca.bluespurs.bluespursapitest.model.response.ProductDto;
+import ca.bluespurs.bluespursapitest.service.exception.ObjectNotFoundException;
 
 /**
  * Interface containing the client search methods for searching for products in both Wallmart and Best Buy.
@@ -10,12 +13,11 @@ import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductsHolder
  */
 public interface SearchClient {
 	/**
-	 * Searches for the the cheapest product matching the given name. As the best buy accepts the page size and sorting,
-	 * we are using these two features together to return only the cheapest product using the API by sorting by the
-	 * product's sale price in descending order and having the page size as 1.
+	 * Method that will retrieve the cheapest product with the given name.
 	 *
-	 * @param name The name to be searched.
-	 * @return The cheapest product matching the name.
+	 * @param name The product to be found
+	 * @return The cheapest product.
+	 * @throws ObjectNotFoundException if no product with the given name can be found.
 	 */
-	BestBuyProductsHolder searchBestBuy(String name);
+	ProductDto retrieveCheapestProduct(String name) throws ObjectNotFoundException;
 }

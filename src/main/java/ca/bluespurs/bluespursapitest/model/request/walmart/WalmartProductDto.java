@@ -1,4 +1,4 @@
-package ca.bluespurs.bluespursapitest.model.request.bestbuy;
+package ca.bluespurs.bluespursapitest.model.request.walmart;
 
 import java.io.Serializable;
 
@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @author Rodrigo da Silva
  * @version 1.0.0
  */
-public class BestBuyProductDto implements Serializable {
+public class WalmartProductDto implements Serializable {
 	private String name;
 	private double salePrice;
 

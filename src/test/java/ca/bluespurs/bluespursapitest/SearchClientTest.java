@@ -1,7 +1,10 @@
 package ca.bluespurs.bluespursapitest;
 
 import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductsHolder;
+import ca.bluespurs.bluespursapitest.model.response.ProductDto;
 import ca.bluespurs.bluespursapitest.service.SearchClient;
+import ca.bluespurs.bluespursapitest.service.SearchClientImpl;
+import ca.bluespurs.bluespursapitest.service.exception.ObjectNotFoundException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,21 +22,21 @@ public class SearchClientTest {
 	private SearchClient searchClient;
 
 	@Test
-	public void searchBestBy_whenProductFound() {
+	public void searchBestBy_whenBestBuyIsCheaper() throws Exception {
 		final String name = "ipad";
-		final BestBuyProductsHolder productsHolder = searchClient.searchBestBuy(name);
-		Assert.assertNotNull(productsHolder);
-		Assert.assertNotNull(productsHolder.getProducts());
-		Assert.assertFalse(productsHolder.getProducts().isEmpty());
-		Assert.assertTrue(productsHolder.getProducts().get(0).getName().toLowerCase().contains(name));
+		final ProductDto product = searchClient.retrieveCheapestProduct(name);
+		Assert.assertEquals(SearchClientImpl.BEST_BUY_LOC, product.getLocation());
 	}
 
 	@Test
-	public void searchBestBy_whenProductNotFound() {
-		final String name = "asdfqwert";
-		final BestBuyProductsHolder productsHolder = searchClient.searchBestBuy(name);
-		Assert.assertNotNull(productsHolder);
-		Assert.assertNotNull(productsHolder.getProducts());
-		Assert.assertTrue(productsHolder.getProducts().isEmpty());
+	public void searchBestBy_whenWalmartIsCheaper() throws Exception {
+		final String name = "lg monitor";
+		final ProductDto product = searchClient.retrieveCheapestProduct(name);
+		Assert.assertEquals(SearchClientImpl.WALMART_LOC, product.getLocation());
+	}
+
+	@Test(expected = ObjectNotFoundException.class)
+	public void testProductRetrieval_whenProductNotFound() throws Exception {
+		searchClient.retrieveCheapestProduct("asdfqwert");
 	}
 }

@@ -6,10 +6,14 @@ import ca.bluespurs.bluespursapitest.exception.InvalidRequestException;
 import ca.bluespurs.bluespursapitest.exception.ProductNotFoundException;
 import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductDto;
 import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductsHolder;
+import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductDto;
+import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductsHolder;
 import ca.bluespurs.bluespursapitest.model.response.ProductDto;
 import ca.bluespurs.bluespursapitest.service.SearchClient;
+import ca.bluespurs.bluespursapitest.service.exception.ObjectNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +32,6 @@ import java.util.List;
 @RestController
 @RequestMapping(RestResources.PRODUCT)
 public class ProductSearchRest {
-	private final String BEST_BUY_LOC = "Best Buy";
-
 	private final SearchClient searchClient;
 
 	/**
@@ -48,21 +50,18 @@ public class ProductSearchRest {
 	 * @param name The name to be used in the search.
 	 * @return A response containing the product with the best price matching the name.
 	 */
-	@GetMapping(value = RestResources.PRODUCT_SEARCH)
-	public ResponseEntity<ProductDto> search(@RequestParam("name") String name) {
+	@GetMapping(value = RestResources.PRODUCT_SEARCH, produces = MediaType.APPLICATION_PROBLEM_JSON_UTF8_VALUE)
+	public ResponseEntity<ProductDto> search(@RequestParam(value = "name") String name) {
 		// The name must containing a value.
 		if (StringUtils.isBlank(name)) {
 			throw new InvalidRequestException("The parameter name cannot be empty or null!");
 		}
 
 		try {
-			final List<BestBuyProductDto> bestBuyProducts = searchBestBuyProduct(name);
-
-			final ProductDto product = new ProductDto();
-			product.setProductName(bestBuyProducts.get(0).getName());
-			product.setBestPrice(String.format("%.2f", bestBuyProducts.get(0).getRegularPrice()));
-			product.setLocation(BEST_BUY_LOC);
-			return ResponseEntity.ok(product);
+			return ResponseEntity.ok(searchClient.retrieveCheapestProduct(name));
+		} catch(ObjectNotFoundException ex) {
+			// If no product is found
+			throw new ProductNotFoundException(name);
 		} catch (Exception ex) {
 			// Rethrows the caught exception.
 			if (ex instanceof ProductNotFoundException) {
@@ -70,14 +69,5 @@ public class ProductSearchRest {
 			}
 			throw new InternalServerErrorException(ex.getMessage(), ex);
 		}
-	}
-
-	private List<BestBuyProductDto> searchBestBuyProduct(@RequestParam("name") String name) {
-		final BestBuyProductsHolder bestBuy = searchClient.searchBestBuy(name);
-		final List<BestBuyProductDto> bestBuyProducts = bestBuy.getProducts();
-		if (bestBuyProducts.isEmpty()) {
-			throw new ProductNotFoundException(name);
-		}
-		return bestBuyProducts;
 	}
 }
