@@ -4,14 +4,12 @@ import ca.bluespurs.bluespursapitest.common.RestResources;
 import ca.bluespurs.bluespursapitest.exception.InternalServerErrorException;
 import ca.bluespurs.bluespursapitest.exception.InvalidRequestException;
 import ca.bluespurs.bluespursapitest.exception.ProductNotFoundException;
-import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductDto;
-import ca.bluespurs.bluespursapitest.model.request.bestbuy.BestBuyProductsHolder;
-import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductDto;
-import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductsHolder;
 import ca.bluespurs.bluespursapitest.model.response.ProductDto;
 import ca.bluespurs.bluespursapitest.service.SearchClient;
 import ca.bluespurs.bluespursapitest.service.exception.ObjectNotFoundException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * Rest Controller that will receive the calls in order to search for a product with the given name in both Walmart and
@@ -32,6 +28,8 @@ import java.util.List;
 @RestController
 @RequestMapping(RestResources.PRODUCT)
 public class ProductSearchRest {
+	private static final Logger LOGGER = LogManager.getLogger(ProductSearchRest.class);
+
 	private final SearchClient searchClient;
 
 	/**
@@ -54,19 +52,25 @@ public class ProductSearchRest {
 	public ResponseEntity<ProductDto> search(@RequestParam(value = "name") String name) {
 		// The name must containing a value.
 		if (StringUtils.isBlank(name)) {
-			throw new InvalidRequestException("The parameter name cannot be empty or null!");
+			final InvalidRequestException ex = new InvalidRequestException("The parameter name cannot be empty or null!");
+			LOGGER.error("The name cannot be blank!", ex);
+			throw ex;
 		}
 
 		try {
-			return ResponseEntity.ok(searchClient.retrieveCheapestProduct(name));
+			final ProductDto product = searchClient.retrieveCheapestProduct(name);
+			LOGGER.info("Search Successful! Returning product: " + product.toString());
+			return ResponseEntity.ok(product);
 		} catch(ObjectNotFoundException ex) {
 			// If no product is found
+			LOGGER.error("The product with name " + name + " could not be found!", ex);
 			throw new ProductNotFoundException(name);
 		} catch (Exception ex) {
 			// Rethrows the caught exception.
 			if (ex instanceof ProductNotFoundException) {
 				throw ex;
 			}
+			LOGGER.error("Unexpected error: " + ex.getMessage(), ex);
 			throw new InternalServerErrorException(ex.getMessage(), ex);
 		}
 	}

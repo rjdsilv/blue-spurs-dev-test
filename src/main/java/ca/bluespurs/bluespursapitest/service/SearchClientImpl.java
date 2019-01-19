@@ -6,6 +6,8 @@ import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductDto;
 import ca.bluespurs.bluespursapitest.model.request.walmart.WalmartProductsHolder;
 import ca.bluespurs.bluespursapitest.model.response.ProductDto;
 import ca.bluespurs.bluespursapitest.service.exception.ObjectNotFoundException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.Objects;
  */
 @Service("searchClient")
 public class SearchClientImpl implements SearchClient {
+	private static final Logger LOGGER = LogManager.getLogger(SearchClientImpl.class);
+
 	public static final String BEST_BUY_LOC = "Best Buy";
 	public static final String WALMART_LOC = "Walmart";
 
@@ -48,6 +52,7 @@ public class SearchClientImpl implements SearchClient {
 	 */
 	@Override
 	public ProductDto retrieveCheapestProduct(String name) throws ObjectNotFoundException {
+		LOGGER.info("Searching for the cheapest product.");
 		final List<BestBuyProductDto> bestBuyProducts = searchBestBuyProduct(name);
 		final List<WalmartProductDto> walmartProducts = searchWalmartProduct(name);
 
@@ -60,12 +65,14 @@ public class SearchClientImpl implements SearchClient {
 	}
 
 	private BestBuyProductsHolder searchBestBuy(String name) {
+		LOGGER.debug("Searching in Best Buy for PRODUCT " + name);
 		final String callUrl = String.format(BESTBUY_API_FORMAT, name, BESTBUY_API_KEY);
 		final ResponseEntity<BestBuyProductsHolder> response = restTemplate.getForEntity(callUrl, BestBuyProductsHolder.class);
 		return response.getBody();
 	}
 
 	private WalmartProductsHolder searchWalmart(String name) {
+		LOGGER.debug("Searching in Walmart for PRODUCT " + name);
 		final String callUrl = String.format(WALMART_API_FMT, WALMART_API_KEY, name);
 		final ResponseEntity<WalmartProductsHolder> response = restTemplate.getForEntity(callUrl, WalmartProductsHolder.class);
 		return response.getBody();
@@ -86,15 +93,18 @@ public class SearchClientImpl implements SearchClient {
 		final ProductDto product = new ProductDto();
 
 		if (bestBuyProducts.isEmpty() || walmartProducts.get(0).getSalePrice() < bestBuyProducts.get(0).getSalePrice()) {
+			LOGGER.info("Cheapest product found in WALMART");
 			product.setProductName(walmartProducts.get(0).getName());
 			product.setBestPrice(String.format("%.2f", walmartProducts.get(0).getSalePrice()));
 			product.setLocation(WALMART_LOC);
 		} else if (walmartProducts.isEmpty() || bestBuyProducts.get(0).getSalePrice() < walmartProducts.get(0).getSalePrice()) {
+			LOGGER.info("Cheapest product found in BEST BUY");
 			product.setProductName(bestBuyProducts.get(0).getName());
 			product.setBestPrice(String.format("%.2f", bestBuyProducts.get(0).getSalePrice()));
 			product.setLocation(BEST_BUY_LOC);
 		}
 
+		LOGGER.info("Product found is: " + product.toString());
 		return product;
 	}
 }
